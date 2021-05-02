@@ -1,33 +1,19 @@
 {
-  "name": "compound-open-oracle",
-  "version": "1.1.1",
-  "description": "The Compound Open Oracle",
-  "main": "index.js",
-  "repository": "https://github.com/compound-finance/open-oracle",
-  "author": "Compound Labs, Inc.",
-  "license": "MIT",
-  "dependencies": {
-    "bignumber.js": "^9.0.0",
-    "eth-saddle": "0.1.21",
-    "web3": "^1.2.4",
-    "yargs": "^15.0.2"
-  },
+  "name": "Compound-BOOSTER",
   "devDependencies": {
-    "istanbul": "^0.4.5",
-    "jest": "^24.9.0",
-    "jest-cli": "^24.9.0",
-    "jest-junit": "^10.0.0"
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.3.0",
+    "ethers": "^5.0.32",
+    "hardhat": "^2.1.2",
+    "hardhat-deploy": "^0.7.0-beta.50",
+    "hardhat-deploy-ethers": "^0.3.0-beta.7"
   },
+  "dependencies": {},
   "scripts": {
-    "test": "script/test",
-    "coverage": "script/coverage",
-    "console": "npx -n --experimental-repl-await saddle console",
-    "compile": "npx saddle compile",
-    "deploy": "npx saddle deploy"
-  },
-  "resolutions": {
-    "**/ganache-core": "https://github.com/compound-finance/ganache-core.git#compound",
-    "scrypt.js": "https://registry.npmjs.org/@compound-finance/ethereumjs-wallet/-/ethereumjs-wallet-0.6.3.tgz",
-    "**/sha3": "^2.1.2"
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat deploy"
   }
 }

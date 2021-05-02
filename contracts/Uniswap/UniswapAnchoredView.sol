@@ -18,7 +18,7 @@ contract UniswapAnchoredView is UniswapConfig {
     /// @notice The Open Oracle Price Data contract
     OpenOraclePriceData public immutable priceData;
 
-    /// @notice The number of wei in 1 ETH
+    /// @notice The number of wei in 1 HT
     uint public constant ethBaseUnit = 1e18;
 
     /// @notice A common scaling factor to maintain precision
@@ -63,7 +63,7 @@ contract UniswapAnchoredView is UniswapConfig {
     /// @notice The event emitted when reporter invalidates itself
     event ReporterInvalidated(address reporter);
 
-    bytes32 constant ethHash = keccak256(abi.encodePacked("ETH"));
+    bytes32 constant ethHash = keccak256(abi.encodePacked("HT"));
     bytes32 constant rotateHash = keccak256(abi.encodePacked("rotate"));
 
     /**
@@ -116,12 +116,22 @@ contract UniswapAnchoredView is UniswapConfig {
         return priceInternal(config);
     }
 
+    /**
+     * @notice Get the official price for a token
+     * @param token The base token to fetch the price of
+     * @return Price denominated in USD, with 6 decimals
+     */
+    function getPriceByToken(address token) external view returns (uint) {
+        TokenConfig memory config = getTokenConfigByUnderlying(token);
+        return priceInternal(config);
+    }
+
     function priceInternal(TokenConfig memory config) internal view returns (uint) {
         if (config.priceSource == PriceSource.REPORTER) return prices[config.symbolHash];
         if (config.priceSource == PriceSource.FIXED_USD) return config.fixedPrice;
         if (config.priceSource == PriceSource.FIXED_ETH) {
             uint usdPerEth = prices[ethHash];
-            require(usdPerEth > 0, "ETH price not set, cannot convert to dollars");
+            require(usdPerEth > 0, "HT price not set, cannot convert to dollars");
             return mul(usdPerEth, config.fixedPrice) / ethBaseUnit;
         }
     }
@@ -172,7 +182,7 @@ contract UniswapAnchoredView is UniswapConfig {
         if (symbolHash == ethHash) {
             anchorPrice = ethPrice;
         } else {
-            anchorPrice = fetchAnchorPrice(symbol, config, ethPrice);
+            anchorPrice = fetchAnchorPrice(symbol, config, 1e6);
         }
 
         if (reporterInvalidated) {
@@ -211,12 +221,12 @@ contract UniswapAnchoredView is UniswapConfig {
      *  Conversion factor is 1e18 for eth/usdc market, since we decode uniswap price statically with 18 decimals.
      */
     function fetchEthPrice() internal returns (uint) {
-        return fetchAnchorPrice("ETH", getTokenConfigBySymbolHash(ethHash), ethBaseUnit);
+        return fetchAnchorPrice("HT", getTokenConfigBySymbolHash(ethHash), 1e6);
     }
 
     /**
      * @dev Fetches the current token/usd price from uniswap, with 6 decimals of precision.
-     * @param conversionFactor 1e18 if seeking the ETH price, and a 6 decimal ETH-USDC price in the case of other assets
+     * @param conversionFactor 1e18 if seeking the HT price, and a 6 decimal HT-USDC price in the case of other assets
      */
     function fetchAnchorPrice(string memory symbol, TokenConfig memory config, uint conversionFactor) internal virtual returns (uint) {
         (uint nowCumulativePrice, uint oldCumulativePrice, uint oldTimestamp) = pokeWindowValues(config);
@@ -232,13 +242,13 @@ contract UniswapAnchoredView is UniswapConfig {
         uint unscaledPriceMantissa = mul(rawUniswapPriceMantissa, conversionFactor);
         uint anchorPrice;
 
-        // Adjust rawUniswapPrice according to the units of the non-ETH asset
-        // In the case of ETH, we would have to scale by 1e6 / USDC_UNITS, but since baseUnit2 is 1e6 (USDC), it cancels
+        // Adjust rawUniswapPrice according to the units of the non-HT asset
+        // In the case of HT, we would have to scale by 1e6 / USDC_UNITS, but since baseUnit2 is 1e6 (USDC), it cancels
 
-        // In the case of non-ETH tokens
-        // a. pokeWindowValues already handled uniswap reversed cases, so priceAverage will always be Token/ETH TWAP price.
-        // b. conversionFactor = ETH price * 1e6
-        // unscaledPriceMantissa = priceAverage(token/ETH TWAP price) * expScale * conversionFactor
+        // In the case of non-HT tokens
+        // a. pokeWindowValues already handled uniswap reversed cases, so priceAverage will always be Token/HT TWAP price.
+        // b. conversionFactor = HT price * 1e6
+        // unscaledPriceMantissa = priceAverage(token/HT TWAP price) * expScale * conversionFactor
         // so ->
         // anchorPrice = priceAverage * tokenBaseUnit / ethBaseUnit * ETH_price * 1e6
         //             = priceAverage * conversionFactor * tokenBaseUnit / ethBaseUnit

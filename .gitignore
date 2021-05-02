@@ -11,3 +11,8 @@ yarn-error.log
 junit.xml
 coverage/*
 .saddle_history
+/test
+/scripts
+/deploy
+/build
+/brownie-config.yaml
